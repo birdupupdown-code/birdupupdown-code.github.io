@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8657a">
+<title>待产购买清单</title>
+<style>
+  :root{
+    --bg:#f6f0f3; --card:#ffffff; --ink:#3a2a31; --muted:#9a8790; --line:#efe1e7;
+    --primary:#e2586f; --primary-2:#ef8ea0;
+    --rose-bg:#fdecef; --red:#d94a5e;
+    --blue:#3d82c9; --blue-bg:#e7f0fa;
+    --green:#3fa896; --green-bg:#e4f4f1;
+    --purple:#7d58c4; --purple-bg:#eee7f9;
+    --amber:#d68a28; --amber-bg:#fbf0dd;
+    --gray:#7d8d98; --gray-bg:#eef1f4;
+    --note-bg:#fbf5f7;
+  }
+  [data-theme="dark"]{
+    --bg:#161114; --card:#241c21; --ink:#efe2e8; --muted:#a08a94; --line:#392a32;
+    --primary:#ef7f92; --primary-2:#f5a7b5;
+    --rose-bg:rgba(239,127,146,.16); --red:#ff8ba0;
+    --blue:#7ab3ef; --blue-bg:rgba(122,179,239,.14);
+    --green:#5fc4b2; --green-bg:rgba(95,196,178,.14);
+    --purple:#ab8ae8; --purple-bg:rgba(171,138,232,.14);
+    --amber:#e8b25c; --amber-bg:rgba(232,178,92,.14);
+    --gray:#93a3ae; --gray-bg:rgba(147,163,174,.16);
+    --note-bg:rgba(255,255,255,.05);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{font-size:16px}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+    background:var(--bg); color:var(--ink);
+    line-height:1.5; padding-bottom:env(safe-area-inset-bottom);
+    transition:background .25s,color .25s;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:0 10px 28px}
+
+  .banner{
+    position:relative;background:linear-gradient(135deg,#f9a8b8,#e8657a 60%,#d94f68);
+    color:#fff;border-radius:0 0 16px 16px;padding:14px 16px 0;
+  }
+  .banner .title{font-size:18px;font-weight:700;letter-spacing:1px;padding-right:44px}
+  .banner .sub{font-size:11.5px;opacity:.92;margin-top:3px;line-height:1.6}
+  .theme-btn{
+    position:absolute;top:12px;right:14px;width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);color:#fff;
+    font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;
+  }
+  .tabs{display:flex;gap:5px;margin-top:10px}
+  .tab{
+    flex:1;background:rgba(255,255,255,.18);color:#fff;border:none;
+    border-radius:11px 11px 0 0;padding:8px 2px 9px;font-size:13.5px;font-weight:600;
+    cursor:pointer;transition:background .2s;touch-action:manipulation;
+  }
+  .tab .cnt{display:block;font-size:10px;font-weight:400;opacity:.85;margin-top:1px}
+  .tab.active{background:var(--card);color:var(--primary)}
+  .tab.active .cnt{color:var(--muted)}
+
+  .sheet{display:none}
+  .sheet.active{display:block}
+  .sheet-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    margin:12px 2px 6px;font-size:12px;color:var(--muted);
+  }
+  .sheet-head b{color:var(--ink);font-size:13.5px}
+  .pbar{height:4px;background:var(--line);border-radius:2px;margin:0 2px 10px;overflow:hidden}
+  .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary-2),var(--primary));border-radius:2px;transition:width .3s}
+
+  .cards{display:flex;flex-direction:column;gap:9px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:10px 12px 11px;box-shadow:0 1px 6px rgba(150,60,90,.06);
+    transition:opacity .2s,background .25s;
+  }
+  .card-top{display:flex;align-items:flex-start;gap:8px}
+  .chk{
+    flex-shrink:0;width:21px;height:21px;border-radius:50%;margin-top:1px;
+    border:1.5px solid #d8c3cb;background:var(--card);color:transparent;
+    font-size:12px;font-weight:700;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .15s;
+    touch-action:manipulation;
+  }
+  .card.done .chk{background:var(--green);border-color:var(--green);color:#fff}
+  .card.done{opacity:.6}
+  .card.done h3{text-decoration:line-through;color:var(--muted)}
+  .card-top h3{flex:1;font-size:15px;font-weight:700;line-height:1.35;word-break:break-all}
+  .card.must h3{font-size:13.5px;font-weight:600}
+  .badge{
+    flex-shrink:0;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:1px;
+  }
+  .pri-必备{background:var(--rose-bg);color:var(--red)}
+  .pri-推荐{background:var(--blue-bg);color:var(--blue)}
+  .pri-备用{background:var(--amber-bg);color:var(--amber)}
+  .pri-按需{background:var(--gray-bg);color:var(--gray)}
+  .pri-核对后购{background:var(--purple-bg);color:var(--purple)}
+
+  .card-meta{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .tag{font-size:10.5px;font-weight:600;padding:1.5px 8px;border-radius:999px}
+  .who-mom{background:var(--rose-bg);color:var(--primary)}
+  .who-baby{background:var(--green-bg);color:var(--green)}
+  .who-fam{background:var(--purple-bg);color:var(--purple)}
+  .who-home{background:var(--blue-bg);color:var(--blue)}
+  .who-urg{background:var(--amber-bg);color:var(--amber)}
+  .qty{
+    font-size:13.5px;font-weight:800;color:var(--primary);
+    background:var(--rose-bg);padding:0 9px;border-radius:7px;
+  }
+
+  .spec{font-size:12.5px;color:var(--muted);margin-top:5px;word-break:break-all}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{font-size:10.5px;color:var(--muted);background:var(--gray-bg);padding:1.5px 8px;border-radius:999px}
+  .chip.price{background:var(--amber-bg);color:var(--amber)}
+  .chip.low{background:var(--green-bg);color:var(--green)}
+  .chip.brand{background:var(--purple-bg);color:var(--purple)}
+
+  .note{
+    margin-top:7px;font-size:12px;color:var(--muted);line-height:1.6;
+    background:var(--note-bg);border-left:3px solid var(--primary-2);
+    padding:5px 9px;border-radius:7px;word-break:break-all;
+  }
+
+  .link-area{margin-top:8px}
+  .buy-btn{
+    display:flex;align-items:center;justify-content:center;gap:5px;
+    width:100%;padding:8px;border-radius:10px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--primary-2),var(--primary));
+    color:#fff;font-size:13px;font-weight:700;text-decoration:none;
+    box-shadow:0 2px 8px rgba(226,88,111,.3);touch-action:manipulation;
+  }
+  .buy-btn:active{transform:scale(.98)}
+  .link-text{
+    display:block;text-align:center;font-size:12px;color:var(--gray);
+    background:var(--gray-bg);padding:7px;border-radius:10px;font-weight:600;
+  }
+
+  .footer{
+    margin-top:20px;text-align:center;font-size:11px;color:var(--muted);line-height:1.9;
+  }
+  .reset-btn{
+    background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;
+    border-radius:999px;padding:3px 12px;cursor:pointer;touch-action:manipulation;
+  }
+
+  /* ===== 搜索与筛选工具栏 ===== */
+  .toolbar{
+    position:sticky;top:0;z-index:60;background:var(--bg);
+    padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  .toolbar .trow,.toolbar .filters{max-width:680px;margin-left:auto;margin-right:auto}
+  .trow{display:flex;gap:6px;align-items:center}
+  .search{
+    flex:1;min-width:0;height:38px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:13.5px;padding:0 12px;outline:none;
+  }
+  .search::placeholder{color:var(--muted)}
+  .search:focus{border-color:var(--primary)}
+  .ftgl,.freset{
+    height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:12.5px;cursor:pointer;
+    touch-action:manipulation;white-space:nowrap;position:relative;
+  }
+  .freset{display:none;color:var(--red)}
+  .freset.show{display:inline-block}
+  .ftgl .dot{
+    position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;
+    background:var(--red);display:none;
+  }
+  .filters{display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+  .filters.open{display:flex}
+  .f-label{font-size:11px;color:var(--muted);margin-right:1px}
+  .fchip{
+    font-size:11.5px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);cursor:pointer;touch-action:manipulation;
+    transition:all .15s;
+  }
+  .fchip.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+  .cnt-live{font-weight:600;color:var(--primary);margin-left:6px}
+  .empty{display:none;text-align:center;padding:32px 0;color:var(--muted);font-size:13px}
+
+  @media (min-width:720px){
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .card-top h3{font-size:14.5px}
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <button class="theme-btn" id="theme-btn" aria-label="切换深浅色">🌙</button>
+  <div class="title">👜 待产购买清单</div>
+  <div class="sub">预产期 2026-11-10 · 月子中心28天 · 剖宫产 · 奶粉:母乳=7:3 ｜ 家用包覆盖至 2027-02-07</div>
+  <div class="tabs">
+    <button class="tab active" data-sheet="chanfang">产房包<span class="cnt">14项 · ¥325</span></button>
+    <button class="tab" data-sheet="bingfang">病房包<span class="cnt">45项 · ¥3470</span></button>
+    <button class="tab" data-sheet="jiayong">家用包<span class="cnt">54项 · ¥16666</span></button>
+    <button class="tab" data-sheet="daibi">入院必带<span class="cnt">4项</span></button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="trow">
+    <input class="search" id="search" type="search" placeholder="搜索物品 / 规格 / 品牌 / 备注…" autocomplete="off">
+    <button class="ftgl" id="ftgl">筛选 ▾<span class="dot" id="fdot"></span></button>
+    <button class="freset" id="freset">重置</button>
+  </div>
+  <div class="filters" id="filters">
+    <span class="f-label">对象</span>
+    <button class="fchip active" data-f="who" data-v="all">全部</button>
+    <button class="fchip" data-f="who" data-v="mom">母亲用</button>
+    <button class="fchip" data-f="who" data-v="baby">宝宝用</button>
+    <button class="fchip" data-f="who" data-v="home">家用0-3月</button>
+    <button class="fchip" data-f="who" data-v="fam">共用/家属</button>
+    <button class="fchip" data-f="who" data-v="urg">应急</button>
+    <span class="f-label">优先级</span>
+    <button class="fchip active" data-f="pri" data-v="all">全部</button>
+    <button class="fchip" data-f="pri" data-v="必备">必备</button>
+    <button class="fchip" data-f="pri" data-v="推荐">推荐</button>
+    <button class="fchip" data-f="pri" data-v="备用">备用</button>
+    <button class="fchip" data-f="pri" data-v="按需">按需</button>
+    <button class="fchip" data-f="pri" data-v="核对后购">核对后购</button>
+    <span class="f-label">状态</span>
+    <button class="fchip active" data-f="done" data-v="all">全部</button>
+    <button class="fchip" data-f="done" data-v="undone">未购</button>
+    <button class="fchip" data-f="done" data-v="done">已购</button>
+  </div>
+</div>
+
+<div class="wrap">
+<section class="sheet" id="sheet-chanfang">
+  <div class="sheet-head">
+    <b>产房包</b>
+    <span>共14项 · 合计¥325 · <span class="prog" id="prog-chanfang">已购 0/14</span><span class="cnt-live" id="count-chanfang"></span></span>
+  </div>
+  <div class="pbar"><i id="pbar-chanfang"></i></div>
+  <div class="cards">
+<article class="card" data-id="5" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>待产能量补给</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 组</span>
+  </div>
+  <p class="spec">巧克力+红牛/同类能量饮料，小份组合</p>
+  <div class="chips"><span class="chip">2026-11-01前</span></div>
+  <div class="note">仅临产时使用；妊娠糖尿病或禁忌者先问医生</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="6" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>吸管水杯</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">≥500ml，耐热、防漏，含独立吸管</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">瑞幸</span></div>
+  <div class="note">产房即时饮水；已有水杯时不再购买</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="7" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>安心裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 片</span>
+  </div>
+  <p class="spec">产妇型L/XL</p>
+  <div class="chips"></div>
+  <div class="note">病房包拆包</div>
+  <div class="link-area"><span class="link-text">病房包拆包</span></div>
+</article>
+<article class="card" data-id="8" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产褥垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">60&#215;90cm，10片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">海氏海诺</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥25.12</span></div>
+  <div class="note">医院要求1-2包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100084549670.html?pcdk=D2Lw3ZZPs9qyBtBek6SNfKPQNhglBY-Tsxs16Va_NkWsrPdRUq7ixNIcczMRilTj.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTQwMzA0NzglMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM0MzQ1ODAwMQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="9" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>计量型卫生巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">计血量型，5片左右/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥45</span><span class="chip price">合计¥45</span><span class="chip low">最低¥42</span></div>
+  <div class="note">医院要求1-2包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100344565962.html?pcdk=Kw5h-201w-94nh8mTY3fNeSSy4onWIFf7nr_2zKuz7KBeZuDxRGIF9e4sPgOpygz.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTMzNzM4NTElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTIyMTM4NDMwNQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="10" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>抽纸</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">3层，100-130抽/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span></div>
+  
+  <div class="link-area"><span class="link-text">病房包拆包</span></div>
+</article>
+<article class="card" data-id="11" data-who="mom" data-pri="核对后购">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>胎心监护带</h3>
+    <span class="badge pri-核对后购">核对后购</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">2 条</span>
+  </div>
+  <p class="spec">孕产妇胎心监护固定带，弹性宽约8-10cm，可调节</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">可孚</span><span class="chip price">单价¥25</span><span class="chip price">合计¥50</span><span class="chip low">最低¥12.9</span></div>
+  <div class="note">医院通常提供；只有产科要求自备时购买，2条为一套监护带</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100041524823.html?pcdk=_tKpRptFI-MgFBs18eULmbw532Bstjt80h819qMRIY7s148ni0QmCKDlDH0OiAoT.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAua2V5d29yZF9lbnRlciU0MDE3ODY3MjA0Njg1MjglMjMxNDkzMDQ2MjAlMjM4MjA0NTYxNDElMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzIzNTg5NTQxJTIzMTQ5MzA0NjIwJTIzNzE1NTcwNTQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="12" data-who="mom" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>收腹带</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 条</span>
+  </div>
+  <p class="spec">医用透气型，可调节</p>
+  <div class="chips"><span class="chip">2026-10-10前</span></div>
+  <div class="note">剖宫产必备；顺产按医护建议</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="13" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝包被</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 条</span>
+  </div>
+  <p class="spec">纯棉秋冬款，15-20度</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥150</span><span class="chip price">合计¥150</span><span class="chip low">最低¥104.55</span></div>
+  <div class="note">清洗晾晒后装包；产房即时使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100197274330.html?pcdk=iPTZGdtVrXAWsJ7MP8U851GzkBUgeNNjD8AeL--TNzNXJxHQyUVDnQF7eJ8R2Tfi.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY3OTcwMjg3NjQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjAwOTI3NDAzMw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="14" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝包单</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 条</span>
+  </div>
+  <p class="spec">四季款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">洁丽雅</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span></div>
+  
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100210985457.html?pcdk=IDt_ckYR87rwWezXRQwcKbP8qoUHnOi5qmouY7vKmKEHUf6euz8IJ05FRgLD6ONj.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAua2V5d29yZF9lbnRlciU0MDE3ODY3ODQxNjE5OTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNTA1MTQwOTYwJTJDYTAyNDAuYjAwMjQ5My5jMDAwMDQwMjcuNCUyM3NrdV9jYXJkJTQwMTc4Njc4NDQxNTYwOCUyMzE3ODY1ODgzOTY5MzE2ODM5NTA5MjclMjM3NDc3NzU2NDY" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="15" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>胎帽</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">新生儿款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥30</span><span class="chip price">合计¥30</span><span class="chip low">最低¥30</span></div>
+  
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100322205040.html?pcdk=9jJ45DhiDwyRDfjGRhdA7iLrx0rLFCDWjNtv3qGCItDmWcV1NeBblAu-04xSro-w.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAua2V5d29yZF9lbnRlciU0MDE3ODY3ODQxNjE5OTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNTA1MTQwOTYwJTJDYTAyNDAuYjAwMjQ5My5jMDAwMDQwMjcuMTMlMjNza3VfY2FyZCU0MDE3ODY3ODQyNjc0OTclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNzY2MDA3MDg0" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="16" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>新生儿衣物</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">52码系带和尚服/连体衣</p>
+  <div class="chips"><span class="chip">2026-09-30前</span></div>
+  <div class="note">医院要求内外衣2-3套；先带2套；其中1套随产房包，其余放病房</div>
+  
+</article>
+<article class="card" data-id="18" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>NB纸尿裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">4 片</span>
+  </div>
+  <p class="spec">NB码</p>
+  <div class="chips"></div>
+  <div class="note">病房包拆包</div>
+  <div class="link-area"><span class="link-text">病房包拆包</span></div>
+</article>
+<article class="card" data-id="58" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>新生儿衣物</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">52码系带和尚服/连体衣</p>
+  <div class="chips"><span class="chip">2026-09-30前</span></div>
+  <div class="note">医院要求内外衣2-3套；先带2套；其中1套随产房包，其余放病房</div>
+  
+</article>
+  </div>
+  <div class="empty" id="empty-chanfang">无匹配结果，请调整关键词或筛选条件</div>
+</section>
+<section class="sheet" id="sheet-bingfang">
+  <div class="sheet-head">
+    <b>病房包</b>
+    <span>共45项 · 合计¥3470 · <span class="prog" id="prog-bingfang">已购 0/45</span><span class="cnt-live" id="count-bingfang"></span></span>
+  </div>
+  <div class="pbar"><i id="pbar-bingfang"></i></div>
+  <div class="cards">
+<article class="card" data-id="17" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝袜子</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 双</span>
+  </div>
+  <p class="spec">新生儿松口款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span></div>
+  <div class="note">病房包拆包</div>
+  <div class="link-area"><span class="link-text">病房包拆包</span></div>
+</article>
+<article class="card" data-id="19" data-who="mom" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>冰敷贴</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 盒</span>
+  </div>
+  <p class="spec">顺产会阴冷敷型，6片/盒</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥49</span><span class="chip price">合计¥49</span><span class="chip low">最低¥39.8</span></div>
+  <div class="note">医院建议3-6片；已放病房包，剖宫产先向产科确认是否需要</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100111687030.html?pcdk=ZbMMuRZhIcLon5JjH6wyrIRQemDwtOzGBDjojDVTp9Fb7Ix3F9VL7AXRt1c_B1G6.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjIlMjNza3VfY2FyZCU0MDE3ODY2OTk4NzY1NTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNTk0NzI4OTc2" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="20" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>一次性纯棉内裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">高腰产妇款，5条/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥39</span><span class="chip price">合计¥39</span><span class="chip low">最低¥24.6</span></div>
+  <div class="note">医院要求3-4条；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100006018716.html?pcdk=zuxMHBPnSbKxEwnY-LtNy469yDk37Ap6rWUeqKG7PomWfF8IG_xX6IvpCytYGISe.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjYlMjNza3VfY2FyZCU0MDE3ODY2OTQ0MDM1MjglMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM2NDE2MDIxNA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="21" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>一次性马桶垫纸</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">独立装，10片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span><span class="chip low">最低¥30</span></div>
+  <div class="note">医院提示公共卫生间无冲洗；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100259214002.html?pcdk=7rE3YEgXijORPKRE9RpuMNdBA77V0jfA3_tW5lFit_A1yZBCCMhq3l1Mg3kXw5hS.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjIlMjNza3VfY2FyZCU0MDE3ODY2OTQ5NzU5MjclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNDkzMDQ0MDgw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="22" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产妇卫生巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">产用L/XL，10片左右/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥29</span><span class="chip price">合计¥58</span><span class="chip low">最低¥32.83</span></div>
+  <div class="note">医院要求2-3包，先带2包，病房包另备夜用/日用；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100014511954.html?pcdk=4IsC_8oBf8mDvy49LlLR473IaPnvmwh2Ol0cnzy9jcs4ROtKas_Dd9H5K1GNSawp.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjIlMjNza3VfY2FyZCU0MDE3ODY2OTM2MjI1MTclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjg5OTk4MDMz" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="23" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产褥垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">60&#215;90cm，10片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">海氏海诺</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥25.12</span></div>
+  <div class="note">医院要求1-2包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100084549670.html?pcdk=D2Lw3ZZPs9qyBtBek6SNfKPQNhglBY-Tsxs16Va_NkWsrPdRUq7ixNIcczMRilTj.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTQwMzA0NzglMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM0MzQ1ODAwMQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="24" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>夜用卫生巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">400mm左右，8-10片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥15</span><span class="chip price">合计¥30</span></div>
+  <div class="note">恶露量下降后使用</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="25" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>安心裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">产妇型L/XL，5片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥25</span><span class="chip price">合计¥50</span><span class="chip low">最低¥35.7</span></div>
+  <div class="note">夜间或恶露较多时使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100090087566.html?pcdk=y82W1qVpj95cnsuTv1bjjdPO19QP-7rrqyz2k978Zl6RvEKcpH-O2DCHkJb_dl9s.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy42JTIzc2t1X2NhcmQlNDAxNzg2NzEzOTM4OTUxJTIzMTQ5MzA0NjIwJTIzMTEyODI3MTAwOA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="26" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>日用卫生巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">3 包</span>
+  </div>
+  <p class="spec">240-290mm，10-14片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥79</span><span class="chip price">合计¥237</span></div>
+  <div class="note">恶露量下降后使用</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="27" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>计量型卫生巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">计血量型，5片左右/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥45</span><span class="chip price">合计¥45</span><span class="chip low">最低¥42</span></div>
+  <div class="note">医院要求1-2包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100344565962.html?pcdk=Kw5h-201w-94nh8mTY3fNeSSy4onWIFf7nr_2zKuz7KBeZuDxRGIF9e4sPgOpygz.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTMzNzM4NTElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTIyMTM4NDMwNQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="28" data-who="mom" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>乳头护理膏</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 支</span>
+  </div>
+  <p class="spec">羊毛脂型，30-40g</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">美德乐</span><span class="chip price">单价¥89</span><span class="chip price">合计¥89</span><span class="chip low">最低¥101.5</span></div>
+  <div class="note">哺乳疼痛或皲裂时使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100023039006.html?pcdk=vTAruncnNn_9-xRbDFwMXrqxo7jkcTaFEHBDZBTWa22-jIDKWO_silyzMwiB9dJ5.3z6a.aI3x&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjIlMjNza3VfY2FyZCU0MDE3ODY3OTk5NjE2NDQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNDUyOTc5NDA3" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="29" data-who="mom" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>吸奶器</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">贝瑞克同档双边电动款</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">熊猫贝贝</span><span class="chip price">单价¥1199</span><span class="chip price">合计¥1199</span><span class="chip low">最低¥1658</span></div>
+  <div class="note">医院称宝宝转新生儿科时可能使用；可租赁降低预算</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/10085909451797.html?pcdk=5h7l8mkIXFkFL4xE9icQBcwpn1j6CNBq65w3HU3k_EXZF7EOa46d22z1AgoRhFZ-.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy41JTIzc2t1X2NhcmQlNDAxNzg2NzEyMzEwNDg2JTIzMTQ5MzA0NjIwJTIzMzc3NTE2NzU" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="30" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>哺乳文胸</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">3 件</span>
+  </div>
+  <p class="spec">无钢圈，按临产前围度</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥79</span><span class="chip price">合计¥237</span></div>
+  <div class="note">建议不同品牌先买1件试码</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="31" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>防溢乳垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 盒</span>
+  </div>
+  <p class="spec">一次性，100片/盒</p>
+  <div class="chips"><span class="chip">2026-10-20前</span></div>
+  <div class="note">住院先带少量，余量家用</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="32" data-who="mom" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产妇帽</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 顶</span>
+  </div>
+  <p class="spec">纯棉薄款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">婧麒</span><span class="chip price">单价¥39</span><span class="chip price">合计¥39</span><span class="chip low">最低¥31</span></div>
+  <div class="note">11月出院途中按天气使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100266049959.html?pcdk=XGo6OxSdUg-4wQ1D6fnuyF8dzPKmEup5OzqnVQVP_ARS-v8BBy7yL7DBRtZ7gfep.3z6a.aI3x&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjExJTIzc2t1X2NhcmQlNDAxNzg2ODA1NTk3MjMyJTIzMTc4NjU4ODM5NjkzMTY4Mzk1MDkyNyUyMzE1MTgxODIxNDU" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="33" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>口罩</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">医用外科，10只/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span></div>
+  <div class="note">11月住院备用</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="34" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>哺乳睡衣</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">秋季长袖长裤，纯棉/莫代尔</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥159</span><span class="chip price">合计¥159</span></div>
+  <div class="note">医院3-4套，先备3套，家里已有2套</div>
+  
+</article>
+<article class="card" data-id="35" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>月子鞋/防滑拖鞋</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 双</span>
+  </div>
+  <p class="spec">包跟、防滑软底；与医院清单防滑拖鞋为同一件</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥69</span><span class="chip price">合计¥69</span><span class="chip low">最低¥51</span></div>
+  <div class="note">医院防滑拖鞋与月子鞋合并为1双，不重复购买</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100062386039.html?pcdk=89m0swCBL20wz2ezxtZy7yqsBOlcS1toRmHiz17u9E5vgpjFX9-EYvX2x8ftC97W.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjEwJTIzc2t1X2NhcmQlNDAxNzg2NzAwMjI4OTM2JTIzMTc4NjU4ODM5NjkzMTY4Mzk1MDkyNyUyMzEzMDcwODQ0Mjg" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="36" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>棉袜</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">3 双</span>
+  </div>
+  <p class="spec">松口中筒</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥15</span><span class="chip price">合计¥45</span></div>
+  <div class="note">避免袜口过紧</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="37" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产妇沐浴露</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">温和型，旅行装/300ml以内</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span></div>
+  <div class="note">医院要求自备沐浴乳</div>
+  
+</article>
+<article class="card" data-id="38" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>抽纸（住院，1包随产房）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">6 包</span>
+  </div>
+  <p class="spec">3层，100-130抽/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span></div>
+  <div class="note">不买卷纸；共6包，其中1-2包随入院包带入产房，其余放病房</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="39" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>毛巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">3 条</span>
+  </div>
+  <p class="spec">纯棉，约34&#215;75cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥35</span><span class="chip price">合计¥105</span></div>
+  <div class="note">洗脸、热敷乳房、擦身分开</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="40" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>洗衣皂</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 块</span>
+  </div>
+  <p class="spec">婴儿衣物专用，200g左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span></div>
+  <div class="note">医院明确要求1块</div>
+  
+</article>
+<article class="card" data-id="41" data-who="mom" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>漱口水</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">温和无酒精，500ml</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥25</span><span class="chip price">合计¥25</span><span class="chip low">最低¥51</span></div>
+  <div class="note">不能刷牙时使用，不能替代长期刷牙</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100016867988.html?pcdk=MnbTuE-dtMEkViAfoIDBjegiQQvj6HgJo5kA3j5gtJe37TqHk0BamLD2siMvrSWv.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjYlMjNza3VfY2FyZCU0MDE3ODY2OTgwMjI2MTElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjA1ODg4ODA3" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="42" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>牙膏</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 支</span>
+  </div>
+  <p class="spec">含氟，90-120g</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span></div>
+  <div class="note">旅行装也可</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="43" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>脸盆（母亲用）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">2 个</span>
+  </div>
+  <p class="spec">食品级PP，约30cm</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">妙然</span><span class="chip price">单价¥20</span><span class="chip price">合计¥40</span><span class="chip low">最低¥21.6</span></div>
+  <div class="note">母亲洗脸、擦身分开；与宝宝脸盆分开使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100265688623.html?pcdk=n1a2veZcsVNqOOjAmDs9ELEY1iK8qNA3oyx0Y5kl8aF7zMkov4A9DgS6s8N_fjYj.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy41JTIzc2t1X2NhcmQlNDAxNzg2NzE0Mjk3NzI4JTIzMTQ5MzA0NjIwJTIzMTk5ODQ4MzUzNw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="44" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>软毛牙刷</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 支</span>
+  </div>
+  <p class="spec">孕产妇/超软毛</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">婧麒</span><span class="chip price">单价¥15</span><span class="chip price">合计¥15</span><span class="chip low">最低¥11.9</span></div>
+  <div class="note">普通优质软毛牙刷即可；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100311574366.html?pcdk=5k02W49EDLkCThpUld5D7KpzYH9WFCLUiGu9f0--Kn9lvjovppzCoc2Z_DqaB8Gq.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjMlMjNza3VfY2FyZCU0MDE3ODY2OTQ4OTE2MjklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTUzMjMzMjIwOA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="45" data-who="urg" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>白砂糖</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-urg">母亲/宝宝应急</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">小包装，约400g</p>
+  <div class="chips"><span class="chip">2026-11-01前</span></div>
+  <div class="note">医院注明产妇或宝宝低血糖时考虑；仅按医护指导使用；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="46" data-who="baby" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶瓶</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">宽口玻璃，120-160ml，SS/S奶嘴</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥89</span><span class="chip price">合计¥89</span><span class="chip low">最低¥77.35</span></div>
+  <div class="note">医院列为备用；母乳优先，按医护指导使用；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100039570866.html?pcdk=4VPmiMVhlFqoxrMUg2Cz3lI5KKtPbEWvtKeJ0D1_62EdCvuG-2U8VUQfnQW7xRtU.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY2OTczMDgyODclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTQ5OTU3MDgzMQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="47" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝碗/杯</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">带刻度，食品接触级</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">葆氏</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥11.3</span></div>
+  <div class="note">医院清单首项；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100142168502.html?pcdk=b-gW3DX2g-A2zTmDYv6jdrnhIzwRxxXAmIJPMOPosGpc-mBR9qJDDvXBeTz14byh.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY4MDAzNTk4OTMlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTI4NDY1MTA3OA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="48" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝软头小勺</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">食品接触级</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip brand">葆氏</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥9.9</span></div>
+  <div class="note">医院清单首项；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100062481161.html?pcdk=ifo_m78T5m4tlaFJ3xNOjyJ8C4OqTbwOgBFibLCrFb1D2OY5FnN4fGYS2fcbEGwk.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjYlMjNza3VfY2FyZCU0MDE3ODY4MDAxOTUxNzklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTQwOTc0MjM5Ng" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="49" data-who="baby" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>澳爱白金一段奶粉</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 罐</span>
+  </div>
+  <p class="spec">Aptamil澳洲白金版1段，800g</p>
+  <div class="chips"><span class="chip">2026-11-01前</span><span class="chip brand">爱他美</span><span class="chip price">单价¥220</span><span class="chip price">合计¥220</span><span class="chip low">最低¥235</span></div>
+  <div class="note">规格由京东商品页核对；母乳优先；仅在医护建议下启用，临近预产期购以保证效期</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/10215344972250.html?pcdk=dn7709Fbh_vtpDVrHFwnG3ERGXssAGUDH5XAq0eZpB1h2PaL9Iw5sgtRXWAvgwEm.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4yJTIzc2t1X2NhcmQlNDAxNzg2NzE2MjkyNTExJTIzMTQ5MzA0NjIwJTIzMTQzMjk5MzUzOQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="50" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>NB纸尿裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">NB码，约60片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥99</span><span class="chip price">合计¥99</span></div>
+  <div class="note">医院最多带1包；病房包统一采购；入院时按需取少量带入产房</div>
+  
+</article>
+<article class="card" data-id="51" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿护臀膏</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 支</span>
+  </div>
+  <p class="spec">氧化锌型，50-60g</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">拜耳</span><span class="chip price">单价¥59</span><span class="chip price">合计¥59</span><span class="chip low">最低¥64.8</span></div>
+  <div class="note">医院未开具时自备；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100268371514.html?pcdk=FnqOMkQLguTh-pazTq9Y55BKMYyvAAT8GT7NyVi3JkQ6xcoxDsv_oUVgXpXGBLrM.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY2OTc3Njg1NjclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM4NTg3MzkyNA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="52" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿抽纸（云柔，住院）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 提</span>
+  </div>
+  <p class="spec">婴儿保湿抽纸，3包/提</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥39</span><span class="chip price">合计¥39</span><span class="chip low">最低¥184.86</span></div>
+  <div class="note">擦口鼻用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100091442995.html?pcdk=17WprTCrR2AKllkO37zbKFh7JTIvStC7OK_c0JUrhkwegJjejkkdYUMt9-BKDros.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy45JTIzc2t1X2NhcmQlNDAxNzg2NzEzMTg5NjMxJTIzMTQ5MzA0NjIwJTIzNzQxNDI4Nzg5" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="53" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿棉签</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">1 盒</span>
+  </div>
+  <p class="spec">细轴纸棒，双头，200支左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥18</span><span class="chip price">合计¥18</span><span class="chip low">最低¥8</span></div>
+  <div class="note">仅清洁外部，不深入耳鼻；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100067854706.html?pcdk=k8LJlBatyYjheecEL7EirxxuXFHsR8KxKM50Ypwzc6GZXR4fZ1ZCIZjGuE9W1rad.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY2OTc4MzY1OTMlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTk5MTI1OTA2OQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="54" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿湿巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">无香型，80抽左右/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥25</span><span class="chip price">合计¥50</span><span class="chip low">最低¥35</span></div>
+  <div class="note">医院要求1-2包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100003457172.html?pcdk=eRd5Th2nbsDxHSrXN1dTA-Z_0IBcUKA-YOOu2DxCI2HFReyJUys0Z5I6rNhkERO_.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTY5MjYxMDYlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNDc0MzQ4MDAz" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="55" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝口水巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">3 条</span>
+  </div>
+  <p class="spec">A类纱布，约25&#215;25cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">洁丽雅</span><span class="chip price">单价¥12</span><span class="chip price">合计¥36</span><span class="chip low">最低¥30.2</span></div>
+  <div class="note">清洗消毒后装包；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100006176742.html?pcdk=tNxOqc3tMg7EmOkLV18RdipxZxo0bcF3lMDJUsvubsmcMLJxoVdvvBXvwp6wFdxv.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjMlMjNza3VfY2FyZCU0MDE3ODY2OTcyMjg2MTglMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNzQxNzE1OTY4" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="56" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>纱布手帕</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">3 条</span>
+  </div>
+  <p class="spec">6层纱布，约25&#215;25cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">洁丽雅</span><span class="chip price">单价¥18</span><span class="chip price">合计¥54</span><span class="chip low">最低¥20.13</span></div>
+  <div class="note">洗脸、洗屁屁；清洗消毒；病房包统一采购；入院时按需取少量带入产房</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100012514415.html?pcdk=tN1RwxEHlTnq-VQkWvmcBWxY0RMRZMsdKjf9zjTDQSZmbg3RDhc8ezzCIt1xuX0a.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjIlMjNza3VfY2FyZCU0MDE3ODY2OTcxMTc3NDMlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjA4NzYwMzE5NQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="57" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝袜子</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">3 双</span>
+  </div>
+  <p class="spec">新生儿松口款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥12</span><span class="chip price">合计¥36</span><span class="chip low">最低¥26.9</span></div>
+  <div class="note">翻面检查无线头</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100214643116.html?pcdk=ccC_eSY2pD2rVp6j_yAodnyaefSu4ba4MOJA6-PxpKSjx1CZupvtCP0jpeSqXx4N.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zJTIzc2t1X2NhcmQlNDAxNzg2NzEzMDY3MDcwJTIzMTQ5MzA0NjIwJTIzMTE2Njc4NDE3OQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="59" data-who="baby" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>脸盆（宝宝用）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-baby">宝宝用</span>
+    <span class="qty">2 个</span>
+  </div>
+  <p class="spec">食品级PP，约30cm</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip price">单价¥20</span><span class="chip price">合计¥40</span></div>
+  <div class="note">宝宝洗脸、洗屁屁分开；与母亲脸盆分开使用</div>
+  <div class="link-area"><span class="link-text">洗澡盆套装自带</span></div>
+</article>
+<article class="card" data-id="60" data-who="fam" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>可微波餐盒</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-fam">共用及家属</span>
+    <span class="qty">2 个</span>
+  </div>
+  <p class="spec">玻璃/食品级PP，带盖</p>
+  <div class="chips"><span class="chip">2026-10-10前</span></div>
+  <div class="note">病房有微波炉</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="61" data-who="fam" data-pri="核对后购">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>家庭留夜被子</h3>
+    <span class="badge pri-核对后购">核对后购</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-fam">共用及家属</span>
+    <span class="qty">2 床</span>
+  </div>
+  <p class="spec">单人空调被/薄被</p>
+  <div class="chips"><span class="chip">2026-10-10前</span></div>
+  <div class="note">医院提示单人间有两套；家中已有则不买</div>
+  <div class="link-area"><span class="link-text">自备睡袋</span></div>
+</article>
+<article class="card" data-id="62" data-who="fam" data-pri="核对后购">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>手机充电器</h3>
+    <span class="badge pri-核对后购">核对后购</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-fam">共用及家属</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">Type-C/按手机接口，20W以上</p>
+  <div class="chips"><span class="chip">2026-10-10前</span></div>
+  <div class="note">家中已有可直接装包</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="63" data-who="fam" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>衣架</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-fam">共用及家属</span>
+    <span class="qty">10 个</span>
+  </div>
+  <p class="spec">防滑成人款</p>
+  <div class="chips"><span class="chip">2026-10-10前</span></div>
+  <div class="note">医院要求若干</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+  </div>
+  <div class="empty" id="empty-bingfang">无匹配结果，请调整关键词或筛选条件</div>
+</section>
+<section class="sheet" id="sheet-jiayong">
+  <div class="sheet-head">
+    <b>家用包</b>
+    <span>共54项 · 合计¥16666 · <span class="prog" id="prog-jiayong">已购 0/54</span><span class="cnt-live" id="count-jiayong"></span></span>
+  </div>
+  <div class="pbar"><i id="pbar-jiayong"></i></div>
+  <div class="cards">
+<article class="card" data-id="64" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>一次性产妇内裤（追加）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">3 包</span>
+  </div>
+  <p class="spec">高腰产妇款，5条/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥39</span><span class="chip price">合计¥117</span><span class="chip low">最低¥24.6</span></div>
+  <div class="note">剖宫产/月子中心；避开伤口位置；与产房包1包合计约20条</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100006018716.html?pcdk=zuxMHBPnSbKxEwnY-LtNy469yDk37Ap6rWUeqKG7PomWfF8IG_xX6IvpCytYGISe.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjYlMjNza3VfY2FyZCU0MDE3ODY2OTQ0MDM1MjglMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM2NDE2MDIxNA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="65" data-who="mom" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>产后冲洗器</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">倒置式，约300-500ml</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥25.76</span></div>
+  <div class="note">剖宫产；活动不便时辅助清洁；每日清洗晾干</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100134790891.html?pcdk=rfE8gqZu5yyhUig7nVmZbTZCzqzSZyLlCh7i987IIkB7OlxniZkp-C1y3bulwS5n.3z6a.aI3x&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY4MDA1MDU2NjElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzOTI4NTY0NjYy" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="66" data-who="mom" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>哺乳枕</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-mom">母亲用</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">可拆洗U型，中等支撑</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥129</span><span class="chip price">合计¥129</span><span class="chip low">最低¥92.55</span></div>
+  <div class="note">剖宫产+混合喂养；减少宝宝直接压迫腹部</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100076588028.html?pcdk=mPY42Kk80Gz-60OIX-gpyU7ucULb-vhFKcSk-lZutO2ijbEAEx3ZB0hh-ZZM8Zsj.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY4MDA2NTE1MDElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjExOTgzMjQwOA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="67" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>52码连体服</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">4 件</span>
+  </div>
+  <p class="spec">A类纯棉，52码</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥59</span><span class="chip price">合计¥236</span></div>
+  <div class="note">不多囤；与产房2套统筹</div>
+  
+</article>
+<article class="card" data-id="68" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>59码连体服</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">4 件</span>
+  </div>
+  <p class="spec">A类纯棉，59码</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥65</span><span class="chip price">合计¥260</span></div>
+  <div class="note">适合稍后月龄</div>
+  
+</article>
+<article class="card" data-id="69" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>66码连体服</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">4 件</span>
+  </div>
+  <p class="spec">A类纯棉，66码</p>
+  <div class="chips"><span class="chip">2026-12-20前</span><span class="chip price">单价¥69</span><span class="chip price">合计¥276</span></div>
+  <div class="note">0-3月补充；出生偏大或长得快可提前启用</div>
+  
+</article>
+<article class="card" data-id="70" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>宝宝包被</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 条</span>
+  </div>
+  <p class="spec">纯棉秋冬款，10-20度</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥300</span><span class="chip price">合计¥300</span><span class="chip low">最低¥245</span></div>
+  <div class="note">清洗晾晒后装包；产房即时使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100115409151.html?pcdk=h6uInUPXxOOwD9zxYZdzSH4c2Ck-JJhU6oE_cQX6k9AcGiYB7d_s4tZ0ZI12Ift3.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjElMjNza3VfY2FyZCU0MDE3ODY3OTcwMjg3NjQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjAwOTI3NDAzMw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="71" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>新生儿帽</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 顶</span>
+  </div>
+  <p class="spec">纯棉薄款</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥25</span><span class="chip price">合计¥50</span><span class="chip low">最低¥30</span></div>
+  <div class="note">室内一般无需常戴</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100322205040.html?pcdk=9jJ45DhiDwyRDfjGRhdA7iLrx0rLFCDWjNtv3qGCItDmWcV1NeBblAu-04xSro-w.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAua2V5d29yZF9lbnRlciU0MDE3ODY3ODQxNjE5OTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNTA1MTQwOTYwJTJDYTAyNDAuYjAwMjQ5My5jMDAwMDQwMjcuMTMlMjNza3VfY2FyZCU0MDE3ODY3ODQyNjc0OTclMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNzY2MDA3MDg0" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="72" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>NB纸尿裤（家用补充）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 包</span>
+  </div>
+  <p class="spec">NB码，约60片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥99</span><span class="chip price">合计¥99</span></div>
+  <div class="note">0-3月测算；加产房1包共120片；月子中心另提供NB/B混码170片，不再多囤NB</div>
+  
+</article>
+<article class="card" data-id="73" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>S码纸尿裤</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">6 包</span>
+  </div>
+  <p class="spec">S码，约60片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥109</span><span class="chip price">合计¥654</span></div>
+  <div class="note">0-3月测算；约360片；分两次买，体重达标且NB漏尿后换码</div>
+  
+</article>
+<article class="card" data-id="74" data-who="home" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>M码纸尿裤</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">M码，约50片/包</p>
+  <div class="chips"><span class="chip">2027-01-05后</span><span class="chip price">单价¥119</span><span class="chip price">合计¥238</span></div>
+  <div class="note">0-3月测算；约100片；先买1包，按体重、腰腿贴合和漏尿情况补第2包</div>
+  
+</article>
+<article class="card" data-id="75" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>一次性隔尿垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">4 包</span>
+  </div>
+  <p class="spec">S码2包+M码2包，10片/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥35</span><span class="chip price">合计¥140</span><span class="chip low">最低¥18.66</span></div>
+  <div class="note">按原清单规格</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100352921480.html?pcdk=UXGZyZX58mavs81SrVmvN4UIKflnWKr39lrOwIbS1S5E_dIQVonCN476nLNTWEyM.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy40JTIzc2t1X2NhcmQlNDAxNzg2NzE0NzI0NDIxJTIzMTQ5MzA0NjIwJTIzMTYyNzAxNTI3" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="76" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>可水洗隔尿垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 张</span>
+  </div>
+  <p class="spec">约70&#215;100cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">全棉时代</span><span class="chip price">单价¥69</span><span class="chip price">合计¥69</span><span class="chip low">最低¥69</span></div>
+  <div class="note">便于换尿布</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100043903324.html?pcdk=o9_REvWtToWWf5u-11DLjGo9OimK7NgPk7E-n02TW2ZsVa5Tf_a9TNUWcIJRF6o3.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zJTIzc2t1X2NhcmQlNDAxNzg2NzE0ODY2MzI4JTIzMTQ5MzA0NjIwJTIzMTQwMzg2OTU5NA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="77" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶瓶</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">3 个</span>
+  </div>
+  <p class="spec">宽口玻璃，240ml，S/M奶嘴</p>
+  <div class="chips"><span class="chip">2026-12-20前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥109</span><span class="chip price">合计¥327</span><span class="chip low">最低¥54.47</span></div>
+  <div class="note">0-3月补充；混合喂养按清洗轮换增加至3个240ml奶瓶；月子中心另提供贝亲160ml玻璃奶瓶1个，病房包自备1个，合计5个</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100022957427.html?pcdk=XhGmEM7i7fSyw31qb8517k_A5SoxBaXpw0dL1XdPoEMh3DFs8FjnIvJy4g7O_6aj.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE1NDIxNjM5JTIzMTQ5MzA0NjIwJTIzMzYxNTg0NjQ3" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="78" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶瓶刷</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">硅胶刷+奶嘴刷套装</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥29</span><span class="chip price">合计¥29</span><span class="chip low">最低¥24.9</span></div>
+  <div class="note">独立存放</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100012607086.html?pcdk=MDqQgNci_4XZRPYJOdvj3WqqbAr_5xWAUHapvE507wPNeNkKNGV0ujWoGzQKnA-t.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE2OTM3NTU0JTIzMTQ5MzA0NjIwJTIzOTA5MTIwMDM1" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="79" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶瓶清洗剂</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">婴幼儿专用，500ml左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥26.56</span></div>
+  <div class="note">充分冲洗</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/230820.html?pcdk=WRZCZYv4CdXE_cx54VpUSaxi8BarcmWjzaih6EZXIiRyIiIlqogJHdtCs_lENdIq.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy45JTIzc2t1X2NhcmQlNDAxNzg2NzE3MDQ5NDA5JTIzMTQ5MzA0NjIwJTIzODc0MDE2NjQ3" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="80" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶粉分装盒</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">4格密封，食品接触级</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥39</span><span class="chip price">合计¥39</span><span class="chip low">最低¥32.9</span></div>
+  <div class="note">混合喂养；月子中心及外出冲奶用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100244936555.html?pcdk=KjWuW7xZIrAB56O8drJbKlJPbz0xL1hn6uutrdPE-cSRTDuMgxhqAgTkLh379AX5.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4yJTIzc2t1X2NhcmQlNDAxNzg2NzE2NDg1MjI3JTIzMTQ5MzA0NjIwJTIzMjA3NTQ5NDQ2Mw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="81" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>替换奶嘴</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 套</span>
+  </div>
+  <p class="spec">宽口径S号2个+M号2个</p>
+  <div class="chips"><span class="chip">2026-12-01前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥79</span><span class="chip price">合计¥158</span><span class="chip low">最低¥68</span></div>
+  <div class="note">混合喂养；备用S/M各2个，按流速和宝宝实际吞咽情况更换，不机械按月龄更换</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100023558989.html?pcdk=cwV_zxuZboDgsZ9Wc73Q4VWqFFerPKBpA28SDGUA5NTsFeaNrwy3k6hCN4ern8y1.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjMlMjNza3VfY2FyZCU0MDE3ODY4MDUyNzc5ODYlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzOTc1OTA0MTQz" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="82" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>澳爱白金一段奶粉</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">8 罐</span>
+  </div>
+  <p class="spec">Aptamil澳洲白金版1段，800g</p>
+  <div class="chips"><span class="chip">分批：2026-11-01/12-01/2027-01-01</span><span class="chip brand">爱他美</span><span class="chip price">单价¥220</span><span class="chip price">合计¥1760</span><span class="chip low">最低¥1407</span></div>
+  <div class="note">90天奶粉冲调量约41.2L；800g约冲调5.4L，理论约7.6罐，含余量准备9罐（病房包1罐+家用8罐）；分批购买并随实际奶量调整</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/10218337478786.html?pcdk=rwyJ9S8bijtcyZX7koX3pLNGJKt0zqodmKoYRmWBSs_vG68zNxDZBdIKKXT17qi8.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4yJTIzc2t1X2NhcmQlNDAxNzg2NzE2MjkyNTExJTIzMTQ5MzA0NjIwJTIzMTQzMjk5MzUzOQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="83" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿口手湿巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 包</span>
+  </div>
+  <p class="spec">无香型，80抽/包</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥25</span><span class="chip price">合计¥50</span><span class="chip low">最低¥35</span></div>
+  <div class="note">先小量试用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100003457172.html?pcdk=eRd5Th2nbsDxHSrXN1dTA-Z_0IBcUKA-YOOu2DxCI2HFReyJUys0Z5I6rNhkERO_.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY2OTMzNTMxNDklMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTU2OTU4Nzc5NiUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY2OTY5MjYxMDYlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNDc0MzQ4MDAz" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="84" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿抽纸（云柔，家用）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 提</span>
+  </div>
+  <p class="spec">婴儿保湿抽纸，3包/提</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">贝因美</span><span class="chip price">单价¥159</span><span class="chip price">合计¥318</span></div>
+  <div class="note">与病房用量分开</div>
+  <div class="link-area"><span class="link-text">已买（囤货）</span></div>
+</article>
+<article class="card" data-id="85" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿棉柔巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 提</span>
+  </div>
+  <p class="spec">德佑咩咩巾同档，3包/提</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">德佑</span><span class="chip price">单价¥49</span><span class="chip price">合计¥98</span><span class="chip low">最低¥75</span></div>
+  <div class="note">不囤过多，先试肤感</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100049758862.html?pcdk=83vunDrkhRK2YYCsYL5Gsh_LWZdeNXocdNDcgzpyZ6ARui2ueANntoxBcXaMsImm.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy42JTIzc2t1X2NhcmQlNDAxNzg2NzE1MDE4MzMyJTIzMTQ5MzA0NjIwJTIzMjE5MTQ2Nzgx" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="86" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿洗澡盆</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">懒妈妈同档，带浴垫</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">贝因美</span><span class="chip price">单价¥159</span><span class="chip price">合计¥159</span><span class="chip low">最低¥139</span></div>
+  <div class="note">尺寸先量家中摆放位置</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100354284478.html?pcdk=CAmxMZPaaqyrDMnkraoS0_WAP9h9HEKsrP1D8pk6_rqh0V7tSPDWjO-rvae8D92w.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zJTIzc2t1X2NhcmQlNDAxNzg2NzE1OTQ5ODc3JTIzMTQ5MzA0NjIwJTIzODUyMzc5OTI2" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="87" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>桃子水</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥69</span><span class="chip price">合计¥69</span><span class="chip low">最低¥47.6</span></div>
+  <div class="note">新生儿不一定需要每日使用，按月子中心或儿科建议；先做局部测试</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/100058915977.html?pcdk=AIbsDkx277yjAnYCJcz2cS9cm50jKpUcCzHPh8rhgYVtRPt7ThCBkHrJg3AyuCcM.3z6a.aI3x&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY4MDU0ODExNTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzODc1MjMxODc" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="88" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿洗发沐浴露</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">无泪、低敏、无香或弱香，约300ml</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥59</span><span class="chip price">合计¥59</span></div>
+  <div class="note">新生儿不一定需要每日使用，按月子中心或儿科建议；先做局部测试</div>
+  
+</article>
+<article class="card" data-id="89" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿洗衣液</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 瓶</span>
+  </div>
+  <p class="spec">无香/低敏，1L左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥49</span><span class="chip price">合计¥98</span></div>
+  <div class="note">0-3月补充；与洗衣皂搭配，充分漂洗</div>
+  
+</article>
+<article class="card" data-id="90" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>纱布浴巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 条</span>
+  </div>
+  <p class="spec">A类纯棉，约90&#215;90cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">洁丽雅</span><span class="chip price">单价¥89</span><span class="chip price">合计¥178</span><span class="chip low">最低¥35.49</span></div>
+  <div class="note">轮换使用</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100007662598.html?pcdk=uimMqi_t1iSl7piwGI2q7KLPWJ3U3xa2Tk303b4RLcV9TQU6EziliTXOpSgRP-ip.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4yJTIzc2t1X2NhcmQlNDAxNzg2NzE3NjE4ODE0JTIzMTQ5MzA0NjIwJTIzMTUxNDQxOTQzMQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="91" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>奶瓶消毒器</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">紫外线消毒+烘干</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">京东京造</span><span class="chip price">单价¥699</span><span class="chip price">合计¥699</span><span class="chip low">最低¥658.19</span></div>
+  <div class="note">也可用沸水/蒸汽方式替代</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100305974440.html?spmTag=YTAyMTguYjAwMjQ1NS5jMDAwMDM5OTEucHJvZHVjdF9uYW1lJTQwMTc4NjcxNTMyMDMxNyUyMzE0OTMwNDYyMCUyMzEyNDE3NTQ4ODY" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="92" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿洗衣机</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">3-4kg迷你款，带高温/除菌程序，独立脱水</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">小天鹅</span><span class="chip price">单价¥899</span><span class="chip price">合计¥899</span><span class="chip low">最低¥700</span></div>
+  <div class="note">宝宝衣物与成人衣物分开；空间或预算有限可用手洗替代</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100204387918.html?pcdk=2RgHBOpfit_ZWRyanXb8WuVokAPXiUHDucNnzYIg7w0MawgcjB68bL_bz7H6nuVE.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAua2V5d29yZF9lbnRlciU0MDE3ODY3ODQxNjE5OTQlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzNTA1MTQwOTYwJTJDYTAyNDAuYjAwMjQ5My5jMDAwMDQwMjcuNCUyM3NrdV9jYXJkJTQwMTc4Njc4NTI0NzEyMyUyMzE3ODY1ODgzOTY5MzE2ODM5NTA5MjclMjMxOTY4MDMyMzI2&amp;purchasetab=gfgm" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="93" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>恒温水壶</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">1.2-1.5L，除氯/恒温</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥1599</span><span class="chip price">合计¥1599</span></div>
+  <div class="note">混合或奶粉喂养时使用</div>
+  <div class="link-area"><span class="link-text">一体机自带</span></div>
+</article>
+<article class="card" data-id="94" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>温奶器</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">恒温、解冻、加热，适配宽口奶瓶</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">海尔</span><span class="chip price">单价¥299</span><span class="chip price">合计¥299</span><span class="chip low">最低¥129</span></div>
+  <div class="note">主要用于加热母乳；奶粉应现冲现喂，不建议长时间保温</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100024921046.html?pcdk=kl31nTmnbU86I9IY7dq5H1079aIF3qKB7CqMxM1jT7hYHnlCzIX5CcWJq0jfygqy.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjUlMjNza3VfY2FyZCU0MDE3ODY4MDA4NTY1NDElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTk5ODAwMDU1MQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="95" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿监护器</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">视频+声音、室温显示、夜视，支持本地存储</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">米家</span><span class="chip price">单价¥699</span><span class="chip price">合计¥699</span></div>
+  <div class="note">不能替代成人照护；仍需遵守安全睡眠原则</div>
+  <div class="link-area"><a class="buy-btn" href="https://www.goofish.com/item?spm=a21ybx.search.searchFeedList.2.6eb75737FaRhIj&amp;id=1064139305193&amp;categoryId=126856401" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="96" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿床垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 张</span>
+  </div>
+  <p class="spec">硬质透气，匹配床尺寸</p>
+  <div class="chips"><span class="chip">2026-09-10前</span><span class="chip price">单价¥25</span><span class="chip price">合计¥25</span></div>
+  <div class="note">婴儿床配套必要项；避免过软、缝隙过大</div>
+  <div class="link-area"><span class="link-text">套餐自带</span></div>
+</article>
+<article class="card" data-id="97" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿床（含床垫）</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 张</span>
+  </div>
+  <p class="spec">实木拼接床，200&#215;70cm</p>
+  <div class="chips"><span class="chip">2026-09-10前</span><span class="chip brand">1688</span><span class="chip price">单价¥1516</span><span class="chip price">合计¥1516</span><span class="chip low">最低¥750</span></div>
+  <div class="note">优先满足护栏间距与稳定性要求</div>
+  <div class="link-area"><a class="buy-btn" href="https://detail.1688.com/offer/930095799610.html?spm=a360q.7751291.0.0.7c2329a8H9gqaO&amp;sk=common" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="98" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿睡袋</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 件</span>
+  </div>
+  <p class="spec">A类纯棉，0-3月，适合11月至2月室温</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">十月结晶</span><span class="chip price">单价¥129</span><span class="chip price">合计¥258</span><span class="chip low">最低¥71</span></div>
+  <div class="note">0-3月补充；按月子中心和家中室温选择TOG，避免厚被覆面</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100048091932.html?pcdk=Nr49i8TQ4GWzpEllBxiFb1uWOuCDD86-2v5FdQtG3rimg7dPLKWSxzTZ0jYkaKkp.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjMlMjNza3VfY2FyZCU0MDE3ODY4MDE0MzQwODAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMjk0MzI0NzA0" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="99" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>尿布台</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 台</span>
+  </div>
+  <p class="spec">Honeyseed同档，可调高低</p>
+  <div class="chips"><span class="chip">2026-09-10前</span><span class="chip brand">1688</span><span class="chip price">单价¥799</span><span class="chip price">合计¥799</span><span class="chip low">最低¥115</span></div>
+  <div class="note">先量尺寸并确认稳定性</div>
+  <div class="link-area"><a class="buy-btn" href="https://detail.1688.com/offer/764070919833.html?spm=a360q.7751291.0.0.7c2329a8q5KKOQ&amp;sk=common" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="100" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>防水床垫保护垫</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">2 张</span>
+  </div>
+  <p class="spec">透气防水，匹配婴儿床垫</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">哈妙</span><span class="chip price">单价¥59</span><span class="chip price">合计¥118</span></div>
+  <div class="note">0-3月补充；铺在床笠下，轮换清洗</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/10162313593337.html?pcdk=L1Tft7bKLtA7FOnGjst8fF3pxLS0lXoyzj7mO4knhNIRsfhVAPsUtO4nBiQkeoiE.rQ4a.tlbT&amp;spmTag=YTAyNDAuYjAwMjQ5My5jMDAwMDcyMTAua2V5d29yZF9lbnRlciUyM2J1dHRvbiU0MDE3ODY3OTY1NzA1MDAlMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTM5OTUzNzQ5MCUyQ2EwMjQwLmIwMDI0OTMuYzAwMDA0MDI3LjQlMjNza3VfY2FyZCU0MDE3ODY4MDUyMDcyNzElMjMxNzg2NTg4Mzk2OTMxNjgzOTUwOTI3JTIzMTQyNTc3OTk0MA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="101" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿提篮/新生儿安全座椅</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">0-13kg，反向安装，三点式安全带，符合GB 27887</p>
+  <div class="chips"><span class="chip">2026-10-10前</span><span class="chip price">单价¥699</span><span class="chip price">合计¥699</span></div>
+  <div class="note">出院乘车使用；无私家车或正规配备车辆可不购，不能用普通手提篮替代车载安全座椅</div>
+  
+</article>
+<article class="card" data-id="102" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿车</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 辆</span>
+  </div>
+  <p class="spec">可躺，高景观/双向，中档</p>
+  <div class="chips"><span class="chip">2026-09-10前</span><span class="chip price">单价¥1599</span><span class="chip price">合计¥1599</span></div>
+  <div class="note">重点看平躺角度、避震、折叠和电梯尺寸</div>
+  
+</article>
+<article class="card" data-id="103" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>腰凳</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">带宽腰封、护髋设计，适配0–36月/按体重范围</p>
+  <div class="chips"><span class="chip">2026-12-20前</span><span class="chip price">单价¥199</span><span class="chip price">合计¥199</span></div>
+  <div class="note">新生儿及头颈控制不稳时不能只用单独腰凳；需确认支持新生儿的背带/组合款，通常待宝宝头颈稳定后再使用</div>
+  
+</article>
+<article class="card" data-id="104" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>一次性储奶袋</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 盒</span>
+  </div>
+  <p class="spec">母乳储存袋，100-200ml，30片/盒</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">babycare</span><span class="chip price">单价¥45</span><span class="chip price">合计¥45</span><span class="chip low">最低¥17.71</span></div>
+  <div class="note">奶量稳定后再补货</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100023576353.html?pcdk=lCJNKztAD77fO3qWIGM1-8PhrUXl8oikVphGOzMulp-yX60EWU-VZBwMjA1uJGyC.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE3NzY3MTE0JTIzMTQ5MzA0NjIwJTIzMTA3NjI5NDMxMQ" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="105" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿床笠</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">3 条</span>
+  </div>
+  <p class="spec">A类纯棉，匹配床垫尺寸</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip price">单价¥79</span><span class="chip price">合计¥237</span></div>
+  <div class="note">0-3月补充；床面保持平整，不放枕头、围栏软包及松散被褥</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="106" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿抚触油</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">贝亲同档，100ml</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">贝亲</span><span class="chip price">单价¥69</span><span class="chip price">合计¥69</span><span class="chip low">最低¥22</span></div>
+  <div class="note">先做小面积皮试</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/3099987.html?pcdk=P6c2U8iTgmcj4K9nrXzJgZPKZqiNwcB4T1LyAIgoECOveuoC59HhQ70A5v4z0DOp.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE3MjI2NzE4JTIzMTQ5MzA0NjIwJTIzNTMxNTAwNTI0" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="107" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿指甲剪</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 把</span>
+  </div>
+  <p class="spec">日康婴儿指甲剪同档</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">葆氏</span><span class="chip price">单价¥35</span><span class="chip price">合计¥35</span><span class="chip low">最低¥36.9</span></div>
+  <div class="note">新生儿专用小号</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100270151113.html?pcdk=51Yrt2UVzFw-0ZEYRMVEg2JVj2rmZSdkW3wpxDZv_tek5R5SYaRMwHbblyGQihNK.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zMCUyM3NrdV9jYXJkJTQwMTc4NjcxNTg3MjM3OSUyMzE0OTMwNDYyMCUyMzY3NDI2ODgyMw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="108" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿润肤乳</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 瓶</span>
+  </div>
+  <p class="spec">Aveeno婴儿款，227g左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">Aveeno</span><span class="chip price">单价¥109</span><span class="chip price">合计¥109</span><span class="chip low">最低¥66.83</span></div>
+  <div class="note">先做小面积皮试</div>
+  <div class="link-area"><a class="buy-btn" href="https://npcitem.jd.hk/6050376.html?pcdk=wA3SRoleSz524GRajqIx2Su-Q3WuJT67kSzcqhgq01DHwCjbfjvUwHiQvlNjSVMn.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zJTIzc2t1X2NhcmQlNDAxNzg2NzE3MTM4ODk0JTIzMTQ5MzA0NjIwJTIzMTUxOTQxNjYxNA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="109" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>婴儿衣架</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">20 个</span>
+  </div>
+  <p class="spec">小号防滑</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">葆氏</span><span class="chip price">单价¥2.5</span><span class="chip price">合计¥50</span><span class="chip low">最低¥7.9</span></div>
+  <div class="note">20个左右</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100054342618.html?pcdk=Enhu0B1EB15j2aG0jRb-zaUJgsomNr4OF-3K5ExqInBnn50KRuPzkbJvYqyI86N5.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE3NTU5MTY3JTIzMTQ5MzA0NjIwJTIzMjA1MDUwNzQ2NA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="110" data-who="home" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>安抚奶嘴</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">0-6月，硅胶</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥45</span><span class="chip price">合计¥45</span></div>
+  <div class="note">建立母乳喂养后按需使用</div>
+  
+</article>
+<article class="card" data-id="111" data-who="home" data-pri="按需">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>床铃</h3>
+    <span class="badge pri-按需">按需</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 个</span>
+  </div>
+  <p class="spec">低音量可拆洗款</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip price">单价¥99</span><span class="chip price">合计¥99</span></div>
+  <div class="note">不悬挂在婴儿可抓到的位置</div>
+  
+</article>
+<article class="card" data-id="112" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>抽纸（回家后至3月）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">8 提</span>
+  </div>
+  <p class="spec">3层，100-130抽/包，3包/提</p>
+  <div class="chips"><span class="chip">分批：2026-12-01/2027-01-01</span><span class="chip price">单价¥25</span><span class="chip price">合计¥200</span></div>
+  <div class="note">共24包；用量高时按每周约3包补货</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="113" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>抽纸（月子中心）</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">4 提</span>
+  </div>
+  <p class="spec">3层，100-130抽/包，3包/提</p>
+  <div class="chips"><span class="chip">2026-11-01前</span><span class="chip price">单价¥25</span><span class="chip price">合计¥100</span></div>
+  <div class="note">月子中心不提供；共12包，妈妈和宝宝日常使用</div>
+  <div class="link-area"><span class="link-text">自备</span></div>
+</article>
+<article class="card" data-id="114" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>拍嗝巾</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">6 条</span>
+  </div>
+  <p class="spec">A类6层纱布，约30&#215;50cm</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">洁丽雅</span><span class="chip price">单价¥15</span><span class="chip price">合计¥90</span><span class="chip low">最低¥21.92</span></div>
+  <div class="note">0-3月补充；混合喂养后拍嗝、吐奶时轮换</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100032843238.html?pcdk=HEB27LcOu4CaPeCVz9K9bYYbdJicv6a9Ue4irkb_K6qZAplKnikQ4YD8CCRxWiAu.rQ4a.tlbT&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xNCUyM3NrdV9jYXJkJTQwMTc4NjcxNjYyMzg4OSUyMzE0OTMwNDYyMCUyMzExODk1NDE5Nw" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="115" data-who="home" data-pri="必备">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>电子体温计</h3>
+    <span class="badge pri-必备">必备</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 支</span>
+  </div>
+  <p class="spec">欧姆龙MC-686</p>
+  <div class="chips"><span class="chip">2026-09-30前</span><span class="chip brand">欧姆龙</span><span class="chip price">单价¥149</span><span class="chip price">合计¥149</span><span class="chip low">最低¥91.8</span></div>
+  <div class="note">按说明书测腋温</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/4232218.html?pcdk=7K2sZA3bozniLWAbzJuYBKoGMO1KZFYS2pw9ZfspE8dCKGXbGYI_LcEFrOVR1-OT.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4xJTIzc2t1X2NhcmQlNDAxNzg2NzE3NDc1MzI2JTIzMTQ5MzA0NjIwJTIzMTI3NDI1NDU5MA" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="116" data-who="home" data-pri="备用">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>舌苔清洁刷</h3>
+    <span class="badge pri-备用">备用</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 盒</span>
+  </div>
+  <p class="spec">新生儿纱布型，30只/盒</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">可孚</span><span class="chip price">单价¥25</span><span class="chip price">合计¥25</span><span class="chip low">最低¥11.44</span></div>
+  <div class="note">轻柔清洁，不强行刮舌苔</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100136100897.html?pcdk=pzuUp2Kyghc7MFTkdVZBS6Ok9mN-suhRYDHoKApJpL08-wtvmwKf4qXjCVre_DBB.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy4zJTIzc2t1X2NhcmQlNDAxNzg2NzE2NzEyMTgxJTIzMTQ5MzA0NjIwJTIzOTA3OTM1NjE4" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+<article class="card" data-id="117" data-who="home" data-pri="推荐">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已购">✓</button>
+    <h3>黑白卡</h3>
+    <span class="badge pri-推荐">推荐</span>
+  </div>
+  <div class="card-meta">
+    <span class="tag who-home">家用（0-3月）</span>
+    <span class="qty">1 套</span>
+  </div>
+  <p class="spec">0-3月视觉卡，20张左右</p>
+  <div class="chips"><span class="chip">2026-10-20前</span><span class="chip brand">英氏</span><span class="chip price">单价¥25</span><span class="chip price">合计¥25</span><span class="chip low">最低¥27.9</span></div>
+  <div class="note">每日短时互动</div>
+  <div class="link-area"><a class="buy-btn" href="https://item.jd.com/100371714052.html?pcdk=OP98_bBTrnHkcYVotj9yWWteyMmYOd0Y2epjq7Dub9fvghn9jX7vakTaCF8LEuog.3z6a.aI3x&amp;spmTag=YTAyMTkuYjAwMjM1Ni5jMDAwMDcyMTAuc2VhcmNoX2J1dHRvbiU0MDE3ODY3MTA5NDgxODclMjMxNDkzMDQ2MjAlMjM3MTMwMzY0ODMlMkNhMDI0MC5iMDAyNDkzLmMwMDAwNDAyNy41JTIzc2t1X2NhcmQlNDAxNzg2NzE3Njg5MTY0JTIzMTQ5MzA0NjIwJTIzODk3Njg1MDc" target="_blank" rel="noopener">去购买 ↗</a></div>
+</article>
+  </div>
+  <div class="empty" id="empty-jiayong">无匹配结果，请调整关键词或筛选条件</div>
+</section>
+<section class="sheet" id="sheet-daibi">
+  <div class="sheet-head">
+    <b>入院必带</b>
+    <span>不计价但必须携带 · <span class="prog" id="prog-daibi">已办 0/4</span><span class="cnt-live" id="count-daibi"></span></span>
+  </div>
+  <div class="pbar"><i id="pbar-daibi"></i></div>
+  <div class="cards">
+<article class="card must" data-id="129" data-who="" data-pri="">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已办">✓</button>
+    <h3>身份证、住院卡、住院押金条（含门诊预约单同押金条）、医保卡、孕期产检资料。</h3>
+  </div>
+</article>
+<article class="card must" data-id="130" data-who="" data-pri="">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已办">✓</button>
+    <h3>夫妻双方身份证及复印件、户口本、结婚证、准生证等办理出生证明材料。</h3>
+  </div>
+</article>
+<article class="card must" data-id="131" data-who="" data-pri="">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已办">✓</button>
+    <h3>出院服1套；家中已有餐盒、被子、充电器等先核对，避免重复购买。</h3>
+  </div>
+</article>
+<article class="card must" data-id="132" data-who="" data-pri="">
+  <div class="card-top">
+    <button class="chk" aria-label="标记已办">✓</button>
+    <h3>医院提供医用产妇垫；药品、维生素D/AD及伤口处理用品均按医生或月子中心医护要求使用。</h3>
+  </div>
+</article>
+  </div>
+  <div class="empty" id="empty-daibi">无匹配结果，请调整关键词或筛选条件</div>
+</section>
+  <div class="footer">
+    共 113 项 · 预估合计 ¥20461 · 已购状态保存在本机浏览器<br>
+    <button class="reset-btn" id="reset-btn">清除已购标记</button>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var STORE='purchase-check-v1', THEME='purchase-theme-v1';
+    var done = [];
+    try { done = JSON.parse(localStorage.getItem(STORE)||'[]'); } catch(e){}
+
+    // 主题
+    var themeBtn = document.getElementById('theme-btn');
+    function applyTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      themeBtn.textContent = t==='dark' ? '☀️' : '🌙';
+    }
+    var saved = localStorage.getItem(THEME);
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(theme);
+    themeBtn.addEventListener('click', function(){
+      theme = document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+      localStorage.setItem(THEME, theme); applyTheme(theme);
+    });
+
+    // 勾选
+    var cards = document.querySelectorAll('.card');
+    function updateProgress(){
+      document.querySelectorAll('.sheet').forEach(function(sheet){
+        var c = sheet.querySelectorAll('.card');
+        var d = sheet.querySelectorAll('.card.done');
+        var prog = sheet.querySelector('.prog');
+        var bar = sheet.querySelector('.pbar i');
+        if(prog){
+          var label = sheet.id==='sheet-daibi' ? '已办' : '已购';
+          prog.textContent = label+' '+d.length+'/'+c.length;
+        }
+        if(bar && c.length) bar.style.width = Math.round(d.length/c.length*100)+'%';
+      });
+    }
+    cards.forEach(function(card){
+      var id = card.getAttribute('data-id');
+      if(done.indexOf(id)>=0) card.classList.add('done');
+      var btn = card.querySelector('.chk');
+      btn.addEventListener('click', function(){
+        var i = done.indexOf(id);
+        if(i>=0){ done.splice(i,1); card.classList.remove('done'); }
+        else { done.push(id); card.classList.add('done'); }
+        try { localStorage.setItem(STORE, JSON.stringify(done)); } catch(e){}
+        updateProgress();
+        applyFilters();
+      });
+    });
+    updateProgress();
+
+    // 筛选与搜索
+    var fState = { who:'all', pri:'all', done:'all', q:'' };
+    var activeCount = 0;
+    function setActive(){
+      activeCount = (fState.who!=='all'?1:0)+(fState.pri!=='all'?1:0)+(fState.done!=='all'?1:0)+(fState.q?1:0);
+      document.getElementById('fdot').style.display = activeCount?'block':'none';
+      document.getElementById('freset').classList.toggle('show', activeCount>0);
+    }
+    function matches(card){
+      var isMust = card.classList.contains('must');
+      if(!isMust){
+        if(fState.who!=='all' && card.getAttribute('data-who')!==fState.who) return false;
+        if(fState.pri!=='all' && card.getAttribute('data-pri')!==fState.pri) return false;
+      }
+      var isDone = card.classList.contains('done');
+      if(fState.done==='done' && !isDone) return false;
+      if(fState.done==='undone' && isDone) return false;
+      if(fState.q && card.textContent.toLowerCase().indexOf(fState.q)<0) return false;
+      return true;
+    }
+    function applyFilters(){
+      document.querySelectorAll('.sheet').forEach(function(sheet){
+        var total=0, vis=0;
+        sheet.querySelectorAll('.card').forEach(function(c){
+          total++;
+          var ok = matches(c);
+          c.style.display = ok?'':'none';
+          if(ok) vis++;
+        });
+        var cnt = sheet.querySelector('.cnt-live');
+        if(cnt){ cnt.textContent = activeCount ? ('显示 '+vis+'/'+total) : ''; }
+        var empty = sheet.querySelector('.empty');
+        if(empty) empty.style.display = (total>0 && vis===0)?'block':'none';
+      });
+    }
+
+    var searchEl = document.getElementById('search');
+    searchEl.addEventListener('input', function(){
+      fState.q = searchEl.value.trim().toLowerCase();
+      setActive(); applyFilters();
+    });
+
+    document.querySelectorAll('.fchip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        var f = chip.getAttribute('data-f');
+        var v = chip.getAttribute('data-v');
+        fState[f] = v;
+        document.querySelectorAll('.fchip[data-f="'+f+'"]').forEach(function(c){ c.classList.toggle('active', c===chip); });
+        setActive(); applyFilters();
+      });
+    });
+
+    var ftgl = document.getElementById('ftgl');
+    var filtersEl = document.getElementById('filters');
+    ftgl.addEventListener('click', function(){
+      filtersEl.classList.toggle('open');
+      ftgl.textContent = filtersEl.classList.contains('open') ? '筛选 ▴' : '筛选 ▾';
+    });
+
+    document.getElementById('freset').addEventListener('click', function(){
+      fState = { who:'all', pri:'all', done:'all', q:'' };
+      searchEl.value = '';
+      document.querySelectorAll('.fchip').forEach(function(c){ c.classList.remove('active'); });
+      document.querySelectorAll('.fchip[data-v="all"]').forEach(function(c){ c.classList.add('active'); });
+      setActive(); applyFilters();
+    });
+
+    setActive(); applyFilters();
+
+    // 页签
+    var tabs = document.querySelectorAll('.tab');
+    var sheets = document.querySelectorAll('.sheet');
+    function show(name){
+      tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.sheet===name); });
+      sheets.forEach(function(s){ s.classList.toggle('active', s.id==='sheet-'+name); });
+      try { history.replaceState(null,'','#'+name); } catch(e){}
+      applyFilters();
+      window.scrollTo(0,0);
+    }
+    tabs.forEach(function(t){ t.addEventListener('click', function(){ show(t.dataset.sheet); }); });
+    var h = (location.hash||'').replace('#','');
+    var valid = ['chanfang','bingfang','jiayong','daibi'];
+    if(valid.indexOf(h)>=0) show(h);
+
+    // 重置
+    document.getElementById('reset-btn').addEventListener('click', function(){
+      if(confirm('清除全部已购/已办标记？')){
+        done=[]; try{ localStorage.setItem(STORE,'[]'); }catch(e){}
+        cards.forEach(function(c){ c.classList.remove('done'); });
+        updateProgress();
+        applyFilters();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
